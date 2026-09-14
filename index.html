@@ -2,10 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Wetterplot Dresden-Klotzsche</title>
 
@@ -40,27 +37,23 @@
         }
 
         .subtitle {
-            margin: 0 0 16px;
+            margin: 0 0 18px;
             color: #60656b;
             text-align: center;
         }
 
         .status {
             min-height: 24px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             text-align: center;
             font-weight: bold;
         }
 
-        .status.loading {
+        .loading {
             color: #245ea8;
         }
 
-        .status.success {
-            color: #386641;
-        }
-
-        .status.error {
+        .error {
             padding: 12px;
             color: #a40000;
             background: #ffecec;
@@ -178,15 +171,15 @@
             border-radius: 2px;
         }
 
-        .temperature-line {
+        .legend-temperature {
             background: #8b0000;
         }
 
-        .humidity-line {
+        .legend-humidity {
             background: #16823b;
         }
 
-        .threshold-line {
+        .legend-threshold {
             height: 0;
             border-top: 3px dashed #e02020;
             border-radius: 0;
@@ -236,7 +229,7 @@
 
             .control-group,
             select,
-            .controls button {
+            button {
                 width: 100%;
             }
 
@@ -251,9 +244,7 @@
 
 <main class="dashboard">
 
-    <h1>
-        Dresden-Klotzsche: Temperatur und absolute Feuchte
-    </h1>
+    <h1>Dresden-Klotzsche: Temperatur und absolute Feuchte</h1>
 
     <p id="subtitle" class="subtitle">
         Vorhersage für die kommenden 7 Tage
@@ -264,45 +255,25 @@
     </div>
 
     <section id="summary" class="summary" hidden>
-
         <div class="card">
-            <div class="card-label">
-                Nächster Vorhersagewert
-            </div>
-
-            <div id="temperatureValue" class="card-value">
-                –
-            </div>
+            <div class="card-label">Nächster Vorhersagewert</div>
+            <div id="temperatureValue" class="card-value">–</div>
         </div>
 
         <div class="card">
-            <div class="card-label">
-                Absolute Feuchte
-            </div>
-
-            <div id="humidityValue" class="card-value">
-                –
-            </div>
+            <div class="card-label">Absolute Feuchte</div>
+            <div id="humidityValue" class="card-value">–</div>
         </div>
 
         <div class="card">
-            <div class="card-label">
-                Entfeuchtungsgrenze
-            </div>
-
-            <div id="thresholdValue" class="card-value">
-                –
-            </div>
+            <div class="card-label">Entfeuchtungsgrenze</div>
+            <div id="thresholdValue" class="card-value">–</div>
         </div>
-
     </section>
 
     <section class="controls">
-
         <div class="control-group">
-            <label for="timeRange">
-                Angezeigter Zeitraum
-            </label>
+            <label for="timeRange">Angezeigter Zeitraum</label>
 
             <select id="timeRange">
                 <option value="1">Nächste 24 Stunden</option>
@@ -324,32 +295,26 @@
             Diagramm als PNG herunterladen
         </button>
 
-        <button
-            id="refreshButton"
-            type="button"
-        >
+        <button id="refreshButton" type="button">
             Wetterdaten aktualisieren
         </button>
-
     </section>
 
     <div class="legend">
-
         <div class="legend-item">
-            <span class="legend-line temperature-line"></span>
+            <span class="legend-line legend-temperature"></span>
             Temperatur [°C]
         </div>
 
         <div class="legend-item">
-            <span class="legend-line humidity-line"></span>
+            <span class="legend-line legend-humidity"></span>
             Absolute Feuchte [g/kg]
         </div>
 
         <div class="legend-item">
-            <span class="legend-line threshold-line"></span>
+            <span class="legend-line legend-threshold"></span>
             Entfeuchtungsgrenze
         </div>
-
     </div>
 
     <div class="chart-wrapper">
@@ -357,185 +322,194 @@
     </div>
 
     <div class="footer">
-        Quelle: Open-Meteo · Referenzgrenze:
-        22 °C und 40 % relative Feuchte
+        Quelle: Open-Meteo · Referenzgrenze: 22 °C und 40 % relative Feuchte
     </div>
 
 </main>
 
 <script>
-"use strict";
+    "use strict";
 
-/*
- * Grundeinstellungen
- */
-const SETTINGS = {
-    latitude: 51.1328,
-    longitude: 13.7672,
-    timezone: "Europe/Berlin",
-    requestDays: 16,
-    referenceTemperature: 22,
-    referenceRelativeHumidity: 0.40,
-    requestTimeout: 15000
-};
+    const LATITUDE = 51.1328;
+    const LONGITUDE = 13.7672;
+    const TIMEZONE = "Europe/Berlin";
 
-let allWeatherRows = [];
-let weatherRows = [];
-let humidityThreshold = 0;
-let selectedDays = 7;
-let resizeTimer = null;
+    const REFERENCE_TEMPERATURE = 22;
+    const REFERENCE_HUMIDITY = 0.40;
 
-const statusElement =
-    document.getElementById("status");
+    let allWeatherRows = [];
+    let visibleWeatherRows = [];
+    let humidityThreshold = 0;
+    let selectedDays = 7;
 
-const timeRangeElement =
-    document.getElementById("timeRange");
+    const canvas = document.getElementById("weatherCanvas");
+    const statusElement = document.getElementById("status");
+    const summaryElement = document.getElementById("summary");
+    const timeRangeElement = document.getElementById("timeRange");
+    const downloadButton = document.getElementById("downloadButton");
+    const refreshButton = document.getElementById("refreshButton");
 
-const downloadButton =
-    document.getElementById("downloadButton");
-
-const refreshButton =
-    document.getElementById("refreshButton");
-
-const canvas =
-    document.getElementById("weatherCanvas");
-
-/*
- * Sättigungsdampfdruck nach Magnus.
- */
-function saturationVaporPressure(temperatureCelsius) {
-    return 6.112 * Math.exp(
-        (17.62 * temperatureCelsius) /
-        (243.12 + temperatureCelsius)
-    );
-}
-
-/*
- * Mischungsverhältnis in g/kg aus
- * Taupunkt und Oberflächendruck.
- */
-function mixingRatioFromDewPoint(
-    dewPointCelsius,
-    pressureHpa
-) {
-    const vaporPressure =
-        saturationVaporPressure(dewPointCelsius);
-
-    const denominator =
-        Math.max(
-            pressureHpa - vaporPressure,
-            0.000001
+    function saturationVaporPressure(temperatureCelsius) {
+        return 6.112 * Math.exp(
+            (17.62 * temperatureCelsius) /
+            (243.12 + temperatureCelsius)
         );
-
-    return (
-        0.622 *
-        vaporPressure /
-        denominator *
-        1000
-    );
-}
-
-/*
- * Entfeuchtungsgrenze bei
- * 22 °C und 40 % relativer Feuchte.
- */
-function calculateThreshold(pressureHpa) {
-    const saturationPressure =
-        saturationVaporPressure(
-            SETTINGS.referenceTemperature
-        );
-
-    const vaporPressure =
-        SETTINGS.referenceRelativeHumidity *
-        saturationPressure;
-
-    return (
-        0.622 *
-        vaporPressure /
-        Math.max(
-            pressureHpa - vaporPressure,
-            0.000001
-        ) *
-        1000
-    );
-}
-
-function median(values) {
-    const sorted = values
-        .filter(Number.isFinite)
-        .slice()
-        .sort(function (a, b) {
-            return a - b;
-        });
-
-    if (sorted.length === 0) {
-        return 1013.25;
     }
 
-    const middle =
-        Math.floor(sorted.length / 2);
+    function mixingRatioFromDewPoint(dewPointCelsius, pressureHpa) {
+        const vaporPressure =
+            saturationVaporPressure(dewPointCelsius);
 
-    if (sorted.length % 2 === 0) {
+        const denominator =
+            Math.max(
+                pressureHpa - vaporPressure,
+                0.000001
+            );
+
         return (
-            sorted[middle - 1] +
-            sorted[middle]
-        ) / 2;
+            0.622 *
+            vaporPressure /
+            denominator *
+            1000
+        );
     }
 
-    return sorted[middle];
-}
+    function calculateThreshold(pressureHpa) {
+        const saturationPressure =
+            saturationVaporPressure(
+                REFERENCE_TEMPERATURE
+            );
 
-/*
- * Die Open-Meteo-Zeitwerte enthalten bereits
- * die lokale Uhrzeit für Europe/Berlin.
- *
- * Diese Funktion verhindert eine versehentliche
- * zweite Zeitzonenumrechnung durch den Browser.
- */
-function parseLocalTime(value) {
-    const match = String(value).match(
-        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
-    );
+        const vaporPressure =
+            REFERENCE_HUMIDITY *
+            saturationPressure;
 
-    if (!match) {
-        return new Date(value);
+        return (
+            0.622 *
+            vaporPressure /
+            Math.max(
+                pressureHpa - vaporPressure,
+                0.000001
+            ) *
+            1000
+        );
     }
 
-    return new Date(
-        Number(match[1]),
-        Number(match[2]) - 1,
-        Number(match[3]),
-        Number(match[4]),
-        Number(match[5]),
-        0,
-        0
-    );
-}
+    function median(values) {
+        const sorted = values
+            .filter(Number.isFinite)
+            .slice()
+            .sort(function (a, b) {
+                return a - b;
+            });
 
-function createApiUrl() {
-    const parameters =
-        new URLSearchParams();
+        if (sorted.length === 0) {
+            return 1013.25;
+        }
 
-    parameters.set(
-        "latitude",
-        String(SETTINGS.latitude)
-    );
+        const middle =
+            Math.floor(sorted.length / 2);
 
-    parameters.set(
-        "longitude",
-        String(SETTINGS.longitude)
-    );
+        if (sorted.length % 2 === 0) {
+            return (
+                sorted[middle - 1] +
+                sorted[middle]
+            ) / 2;
+        }
 
-    parameters.set(
-        "hourly",
-        "temperature_2m,dew_point_2m,surface_pressure"
-    );
+        return sorted[middle];
+    }
 
-    parameters.set(
-        "timezone",
-        SETTINGS.timezone
-    );
+    function createApiUrl() {
+        return (
+            "https://api.open-meteo.com/v1/forecast" +
+            "?latitude=" + LATITUDE +
+            "&longitude=" + LONGITUDE +
+            "&hourly=temperature_2m,dew_point_2m,surface_pressure" +
+            "&timezone=Europe%2FBerlin" +
+            "&forecast_days=16"
+        );
+    }
 
-    parameters.set(
-        "forecast_days",
-        String(SETTINGS.
+    function parseWeatherTime(value) {
+        const parts = String(value).match(
+            /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
+        );
+
+        if (!parts) {
+            return new Date(value);
+        }
+
+        return new Date(
+            Number(parts[1]),
+            Number(parts[2]) - 1,
+            Number(parts[3]),
+            Number(parts[4]),
+            Number(parts[5]),
+            0,
+            0
+        );
+    }
+
+    function loadWeather() {
+        statusElement.textContent =
+            "Wetterdaten werden geladen ...";
+
+        statusElement.className =
+            "status loading";
+
+        refreshButton.disabled = true;
+        downloadButton.disabled = true;
+
+        fetch(createApiUrl())
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error(
+                        "HTTP-Fehler " +
+                        response.status
+                    );
+                }
+
+                return response.json();
+            })
+            .then(function (data) {
+                if (
+                    !data.hourly ||
+                    !Array.isArray(data.hourly.time) ||
+                    !Array.isArray(data.hourly.temperature_2m) ||
+                    !Array.isArray(data.hourly.dew_point_2m) ||
+                    !Array.isArray(data.hourly.surface_pressure)
+                ) {
+                    throw new Error(
+                        "Die Wetterdaten sind unvollständig."
+                    );
+                }
+
+                const times =
+                    data.hourly.time;
+
+                const temperatures =
+                    data.hourly.temperature_2m;
+
+                const dewPoints =
+                    data.hourly.dew_point_2m;
+
+                const pressures =
+                    data.hourly.surface_pressure;
+
+                const numberOfRows =
+                    Math.min(
+                        times.length,
+                        temperatures.length,
+                        dewPoints.length,
+                        pressures.length
+                    );
+
+                const now = new Date();
+
+                const currentHour =
+                    new Date(
+                        now.getFullYear(),
+                        now.getMonth(),
+                        now.getDate(),
+       
