@@ -2,1328 +2,213 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>Wetterplot Dresden-Klotzsche</title>
+    <title>Wettertest Dresden</title>
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             margin: 0;
-            padding: 20px;
+            padding: 30px;
             background: #f4f6f8;
             color: #202124;
             font-family: Arial, Helvetica, sans-serif;
         }
 
-        .dashboard {
-            width: 100%;
-            max-width: 1400px;
+        .box {
+            max-width: 900px;
             margin: 0 auto;
             padding: 24px;
             background: white;
             border: 1px solid #dfe3e8;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
         }
 
         h1 {
-            margin: 0 0 8px;
-            font-size: 26px;
-            text-align: center;
+            margin-top: 0;
         }
 
-        .subtitle {
-            margin: 0 0 18px;
-            color: #60656b;
-            text-align: center;
-        }
-
-        .status {
-            min-height: 24px;
-            margin-bottom: 14px;
-            text-align: center;
+        #status {
+            padding: 14px;
+            background: #e8f1fb;
+            border-radius: 6px;
             font-weight: bold;
         }
 
-        .loading {
-            color: #245ea8;
+        #status.success {
+            color: #176b35;
+            background: #e8f6ed;
         }
 
-        .error {
-            padding: 12px;
+        #status.error {
             color: #a40000;
             background: #ffecec;
-            border: 1px solid #ffbcbc;
-            border-radius: 6px;
         }
 
-        .summary {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(160px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            padding: 14px;
-            background: #f7f9fb;
-            border: 1px solid #e3e7eb;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .card-label {
-            margin-bottom: 6px;
-            color: #60656b;
-            font-size: 13px;
-        }
-
-        .card-value {
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .legend {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-        }
-
-        .legend-line {
-            display: inline-block;
-            width: 28px;
-            height: 4px;
-            border-radius: 2px;
-        }
-
-        .legend-temperature {
-            background: #8b0000;
-        }
-
-        .legend-humidity {
-            background: #16823b;
-        }
-
-        .legend-threshold {
-            height: 0;
-            border-top: 3px dashed #e02020;
-        }
-
-        .chart-wrapper {
-            position: relative;
-            width: 100%;
-            height: 650px;
-            overflow: hidden;
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        .footer {
+        #details {
             margin-top: 16px;
-            color: #60656b;
-            font-size: 12px;
-            text-align: center;
+            line-height: 1.6;
         }
 
-        .refresh-button {
-            display: block;
-            margin: 16px auto 0;
-            padding: 9px 16px;
+        button {
+            margin-top: 18px;
+            padding: 10px 16px;
             color: white;
             background: #245ea8;
-            border: none;
+            border: 0;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-        }
-
-        .refresh-button:hover {
-            background: #194a86;
-        }
-
-        @media (max-width: 750px) {
-            body {
-                padding: 8px;
-            }
-
-            .dashboard {
-                padding: 12px;
-            }
-
-            h1 {
-                font-size: 21px;
-            }
-
-            .summary {
-                grid-template-columns: 1fr;
-            }
-
-            .chart-wrapper {
-                height: 520px;
-            }
         }
     </style>
 </head>
 
 <body>
 
-<main class="dashboard">
-    <h1>Dresden-Klotzsche: Temperatur und absolute Feuchte</h1>
+<div class="box">
+    <h1>Test des Wetterabrufs</h1>
 
-    <p class="subtitle">
-        Vorhersage für die kommenden sieben Tage
-    </p>
-
-    <div id="status" class="status loading">
-        Wetterdaten werden geladen ...
+    <div id="status">
+        JavaScript wird gestartet ...
     </div>
 
-    <section id="summary" class="summary" hidden>
-        <div class="card">
-            <div class="card-label">Nächster Vorhersagewert</div>
-            <div id="currentTemperature" class="card-value">–</div>
-        </div>
+    <div id="details"></div>
 
-        <div class="card">
-            <div class="card-label">Absolute Feuchte</div>
-            <div id="currentHumidity" class="card-value">–</div>
-        </div>
-
-        <div class="card">
-            <div class="card-label">Entfeuchtungsgrenze</div>
-            <div id="thresholdValue" class="card-value">–</div>
-        </div>
-    </section>
-
-    <div class="legend">
-        <div class="legend-item">
-            <span class="legend-line legend-temperature"></span>
-            Temperatur [°C]
-        </div>
-
-        <div class="legend-item">
-            <span class="legend-line legend-humidity"></span>
-            Absolute Feuchte [g/kg]
-        </div>
-
-        <div class="legend-item">
-            <span class="legend-line legend-threshold"></span>
-            Entfeuchtungsgrenze
-        </div>
-    </div>
-
-    <div class="chart-wrapper">
-        <canvas id="weatherCanvas"></canvas>
-    </div>
-
-    <button id="refreshButton" class="refresh-button">
-        Wetterdaten aktualisieren
+    <button id="testButton" type="button">
+        Erneut testen
     </button>
-
-    <div class="footer">
-        Quelle: Open-Meteo · Referenzgrenze: 22 °C und 40 % relative Feuchte
-    </div>
-</main>
+</div>
 
 <script>
+(function () {
     "use strict";
 
-    const SETTINGS = {
-        latitude: 51.1328,
-        longitude: 13.7672,
-        timezone: "Europe/Berlin",
-        forecastDays: 7,
-        referenceTemperature: 22,
-        referenceRelativeHumidity: 0.40
-    };
+    var statusElement =
+        document.getElementById("status");
 
-    let weatherRows = [];
-    let humidityThreshold = 0;
+    var detailsElement =
+        document.getElementById("details");
 
-    function saturationVaporPressure(temperatureCelsius) {
-        return 6.112 * Math.exp(
-            (17.62 * temperatureCelsius) /
-            (243.12 + temperatureCelsius)
+    var testButton =
+        document.getElementById("testButton");
+
+    var apiUrl =
+        "https://api.open-meteo.com/v1/forecast" +
+        "?latitude=51.1328" +
+        "&longitude=13.7672" +
+        "&hourly=temperature_2m,dew_point_2m,surface_pressure" +
+        "&timezone=Europe%2FBerlin" +
+        "&forecast_days=15";
+
+    function showStatus(text, type) {
+        statusElement.textContent = text;
+        statusElement.className = type || "";
+    }
+
+    function testWeatherApi() {
+        showStatus(
+            "JavaScript funktioniert. Wetterdaten werden abgerufen ..."
         );
-    }
 
-    function mixingRatioFromDewPoint(dewPointCelsius, pressureHpa) {
-        const vaporPressure =
-            saturationVaporPressure(dewPointCelsius);
+        detailsElement.textContent = "";
+        testButton.disabled = true;
 
-        const denominator =
-            Math.max(pressureHpa - vaporPressure, 0.000001);
+        var timeoutReached = false;
 
-        return (
-            0.622 *
-            vaporPressure /
-            denominator *
-            1000
-        );
-    }
+        var timeoutId =
+            window.setTimeout(function () {
+                timeoutReached = true;
 
-    function calculateThreshold(pressureHpa) {
-        const saturatedPressure =
-            saturationVaporPressure(
-                SETTINGS.referenceTemperature
-            );
-
-        const vaporPressure =
-            SETTINGS.referenceRelativeHumidity *
-            saturatedPressure;
-
-        return (
-            0.622 *
-            vaporPressure /
-            Math.max(pressureHpa - vaporPressure, 0.000001) *
-            1000
-        );
-    }
-
-    function median(values) {
-        const sorted = [...values]
-            .filter(Number.isFinite)
-            .sort((a, b) => a - b);
-
-        if (sorted.length === 0) {
-            return 1013.25;
-        }
-
-        const middle = Math.floor(sorted.length / 2);
-
-        if (sorted.length % 2 === 0) {
-            return (
-                sorted[middle - 1] +
-                sorted[middle]
-            ) / 2;
-        }
-
-        return sorted[middle];
-    }
-
-    function createApiUrl() {
-        const parameters = new URLSearchParams({
-            latitude: String(SETTINGS.latitude),
-            longitude: String(SETTINGS.longitude),
-            hourly: [
-                "temperature_2m",
-                "dew_point_2m",
-                "surface_pressure"
-            ].join(","),
-            timezone: SETTINGS.timezone,
-            forecast_days: "8"
-        });
-
-        return (
-            "https://api.open-meteo.com/v1/forecast?" +
-            parameters.toString()
-        );
-    }
-
-    async function loadWeather() {
-        const status =
-            document.getElementById("status");
-
-        try {
-            status.textContent =
-                "Wetterdaten werden geladen ...";
-
-            status.className =
-                "status loading";
-
-            const response =
-                await fetch(createApiUrl());
-
-            if (!response.ok) {
-                throw new Error(
-                    "HTTP-Fehler " + response.status
+                showStatus(
+                    "Fehler: Die Wetter-API hat nach 15 Sekunden nicht geantwortet.",
+                    "error"
                 );
-            }
 
-            const data =
-                await response.json();
+                testButton.disabled = false;
+            }, 15000);
 
-            if (
-                !data.hourly ||
-                !Array.isArray(data.hourly.time)
-            ) {
-                throw new Error(
-                    "Keine stündlichen Wetterdaten erhalten."
-                );
-            }
-
-            const temperatures =
-                data.hourly.temperature_2m;
-
-            const dewPoints =
-                data.hourly.dew_point_2m;
-
-            const pressures =
-                data.hourly.surface_pressure;
-
-            if (
-                !temperatures ||
-                !dewPoints ||
-                !pressures
-            ) {
-                throw new Error(
-                    "Temperatur, Taupunkt oder Luftdruck fehlen."
-                );
-            }
-
-            const now = new Date();
-
-            const endTime =
-                now.getTime() +
-                SETTINGS.forecastDays *
-                24 *
-                60 *
-                60 *
-                1000;
-
-            const rows = [];
-
-            for (
-                let index = 0;
-                index < data.hourly.time.length;
-                index++
-            ) {
-                const date =
-                    new Date(data.hourly.time[index]);
-
-                if (
-                    date.getTime() < now.getTime() ||
-                    date.getTime() >= endTime
-                ) {
-                    continue;
+        fetch(apiUrl)
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error(
+                        "HTTP-Fehler " + response.status
+                    );
                 }
 
-                const temperature =
-                    Number(temperatures[index]);
-
-                const dewPoint =
-                    Number(dewPoints[index]);
-
-                const pressure =
-                    Number(pressures[index]);
-
-                if (
-                    !Number.isFinite(temperature) ||
-                    !Number.isFinite(dewPoint) ||
-                    !Number.isFinite(pressure)
-                ) {
-                    continue;
+                return response.json();
+            })
+            .then(function (data) {
+                if (timeoutReached) {
+                    return;
                 }
 
-                rows.push({
-                    date: date,
-                    temperature: temperature,
-                    pressure: pressure,
-                    humidity: mixingRatioFromDewPoint(
-                        dewPoint,
-                        pressure
-                    )
-                });
-            }
-
-            if (rows.length === 0) {
-                throw new Error(
-                    "Keine gültigen Vorhersagewerte gefunden."
-                );
-            }
-
-            weatherRows = rows;
-
-            const referencePressure =
-                median(rows.map(row => row.pressure));
-
-            humidityThreshold =
-                calculateThreshold(referencePressure);
-
-            updateSummary();
-            resizeAndDraw();
-
-            status.textContent =
-                "Zuletzt aktualisiert: " +
-                new Intl.DateTimeFormat(
-                    "de-DE",
-                    {
-                        dateStyle: "medium",
-                        timeStyle: "short"
-                    }
-                ).format(new Date());
-
-            status.className = "status";
-
-        } catch (error) {
-            console.error(error);
-
-            status.textContent =
-                "Die Wetterdaten konnten nicht geladen werden: " +
-                error.message;
-
-            status.className =
-                "status error";
-        }
-    }
-
-    function updateSummary() {
-        const first = weatherRows[0];
-
-        document.getElementById(
-            "currentTemperature"
-        ).textContent =
-            first.temperature.toFixed(1) + " °C";
-
-        document.getElementById(
-            "currentHumidity"
-        ).textContent =
-            first.humidity.toFixed(1) + " g/kg";
-
-        document.getElementById(
-            "thresholdValue"
-        ).textContent =
-            humidityThreshold.toFixed(1) + " g/kg";
-
-        document.getElementById(
-            "summary"
-        ).hidden = false;
-    }
-
-    function resizeAndDraw() {
-        if (weatherRows.length === 0) {
-            return;
-        }
-
-        const canvas =
-            document.getElementById("weatherCanvas");
-
-        const wrapper =
-            canvas.parentElement;
-
-        const pixelRatio =
-            window.devicePixelRatio || 1;
-
-        const width =
-            Math.max(wrapper.clientWidth, 320);
-
-        const height =
-            Math.max(wrapper.clientHeight, 320);
-
-        canvas.width =
-            Math.floor(width * pixelRatio);
-
-        canvas.height =
-            Math.floor(height * pixelRatio);
-
-        canvas.style.width =
-            width + "px";
-
-        canvas.style.height =
-            height + "px";
-
-        const context =
-            canvas.getContext("2d");
-
-        context.setTransform(
-            pixelRatio,
-            0,
-            0,
-            pixelRatio,
-            0,
-            0
-        );
-
-        drawChart(context, width, height);
-    }
-
-    function drawChart(context, width, height) {
-        context.clearRect(0, 0, width, height);
-
-        /*
-         * Nur der untere Rand wurde gegenüber
-         * der funktionierenden Version vergrößert.
-         */
-        const margin = {
-            left: 70,
-            right: 75,
-            top: 30,
-            bottom: 110
-        };
-
-        const plotWidth =
-            width - margin.left - margin.right;
-
-        const plotHeight =
-            height - margin.top - margin.bottom;
-
-        const temperatures =
-            weatherRows.map(row => row.temperature);
-
-        const humidities =
-            weatherRows.map(row => row.humidity);
-
-        let temperatureMin =
-            Math.floor(Math.min(...temperatures) - 1);
-
-        let temperatureMax =
-            Math.ceil(Math.max(...temperatures) + 1);
-
-        let humidityMin =
-            Math.max(
-                0,
-                Math.floor(
-                    Math.min(
-                        ...humidities,
-                        humidityThreshold
-                    ) - 0.5
-                )
-            );
-
-        let humidityMax =
-            Math.ceil(
-                Math.max(
-                    ...humidities,
-                    humidityThreshold
-                ) + 0.5
-            );
-
-        if (temperatureMin === temperatureMax) {
-            temperatureMax++;
-        }
-
-        if (humidityMin === humidityMax) {
-            humidityMax++;
-        }
-
-        const xPosition = index =>
-            margin.left +
-            index /
-            Math.max(weatherRows.length - 1, 1) *
-            plotWidth;
-
-        const temperatureY = value =>
-            margin.top +
-            (
-                temperatureMax - value
-            ) /
-            (
-                temperatureMax - temperatureMin
-            ) *
-            plotHeight;
-
-        const humidityY = value =>
-            margin.top +
-            (
-                humidityMax - value
-            ) /
-            (
-                humidityMax - humidityMin
-            ) *
-            plotHeight;
-
-        drawWeekendAreas(
-            context,
-            margin,
-            plotHeight,
-            xPosition
-        );
-
-        drawGridAndAxes(
-            context,
-            margin,
-            plotWidth,
-            plotHeight,
-            temperatureMin,
-            temperatureMax,
-            humidityMin,
-            humidityMax,
-            temperatureY,
-            humidityY
-        );
-
-        /*
-         * Zusätzliche vertikale Orientierungslinien.
-         * Diese Funktion verändert keine Wetterdaten.
-         */
-        drawTimeGrid(
-            context,
-            margin,
-            plotHeight,
-            xPosition
-        );
-
-        drawThresholdAreas(
-            context,
-            xPosition,
-            humidityY
-        );
-
-        drawSeries(
-            context,
-            temperatures,
-            xPosition,
-            temperatureY,
-            "#8b0000",
-            2
-        );
-
-        drawSeries(
-            context,
-            humidities,
-            xPosition,
-            humidityY,
-            "#16823b",
-            2
-        );
-
-        drawThresholdLine(
-            context,
-            margin,
-            plotWidth,
-            humidityY
-        );
-
-        /*
-         * Nur diese Funktion ersetzt die alte,
-         * einfache Zeitbeschriftung.
-         */
-        drawImprovedTimeAxis(
-            context,
-            margin,
-            plotWidth,
-            plotHeight,
-            xPosition
-        );
-    }
-
-    function drawWeekendAreas(
-        context,
-        margin,
-        plotHeight,
-        xPosition
-    ) {
-        context.save();
-
-        context.fillStyle =
-            "rgba(150, 150, 150, 0.13)";
-
-        for (
-            let index = 0;
-            index < weatherRows.length;
-            index++
-        ) {
-            const day =
-                weatherRows[index].date.getDay();
-
-            if (day === 0 || day === 6) {
-                const left =
-                    index === 0
-                        ? margin.left
-                        : (
-                            xPosition(index - 1) +
-                            xPosition(index)
-                        ) / 2;
-
-                const right =
-                    index === weatherRows.length - 1
-                        ? xPosition(index)
-                        : (
-                            xPosition(index) +
-                            xPosition(index + 1)
-                        ) / 2;
-
-                context.fillRect(
-                    left,
-                    margin.top,
-                    right - left,
-                    plotHeight
-                );
-            }
-        }
-
-        context.restore();
-    }
-
-    function drawGridAndAxes(
-        context,
-        margin,
-        plotWidth,
-        plotHeight,
-        temperatureMin,
-        temperatureMax,
-        humidityMin,
-        humidityMax,
-        temperatureY,
-        humidityY
-    ) {
-        const steps = 6;
-
-        context.save();
-
-        context.font =
-            "12px Arial";
-
-        context.textBaseline =
-            "middle";
-
-        for (let step = 0; step <= steps; step++) {
-            const fraction =
-                step / steps;
-
-            const y =
-                margin.top +
-                plotHeight * fraction;
-
-            context.strokeStyle =
-                "rgba(0, 0, 0, 0.12)";
-
-            context.lineWidth = 1;
-
-            context.beginPath();
-            context.moveTo(margin.left, y);
-            context.lineTo(
-                margin.left + plotWidth,
-                y
-            );
-            context.stroke();
-
-            const temperatureValue =
-                temperatureMax -
-                fraction *
-                (
-                    temperatureMax -
-                    temperatureMin
+                window.clearTimeout(timeoutId);
+
+                if (
+                    !data.hourly ||
+                    !Array.isArray(data.hourly.time)
+                ) {
+                    throw new Error(
+                        "Die API-Antwort enthält keine Stundenwerte."
+                    );
+                }
+
+                var numberOfHours =
+                    data.hourly.time.length;
+
+                var firstTime =
+                    data.hourly.time[0];
+
+                var lastTime =
+                    data.hourly.time[
+                        numberOfHours - 1
+                    ];
+
+                showStatus(
+                    "Erfolgreich: JavaScript und Wetterabruf funktionieren.",
+                    "success"
                 );
 
-            const humidityValue =
-                humidityMax -
-                fraction *
-                (
-                    humidityMax -
-                    humidityMin
+                detailsElement.innerHTML =
+                    "<strong>Empfangene Stundenwerte:</strong> " +
+                    numberOfHours +
+                    "<br>" +
+                    "<strong>Erster Zeitpunkt:</strong> " +
+                    firstTime +
+                    "<br>" +
+                    "<strong>Letzter Zeitpunkt:</strong> " +
+                    lastTime;
+
+                testButton.disabled = false;
+            })
+            .catch(function (error) {
+                if (timeoutReached) {
+                    return;
+                }
+
+                window.clearTimeout(timeoutId);
+
+                showStatus(
+                    "Fehler beim Wetterabruf: " +
+                    error.message,
+                    "error"
                 );
 
-            context.fillStyle =
-                "#8b0000";
-
-            context.textAlign =
-                "right";
-
-            context.fillText(
-                temperatureValue.toFixed(1),
-                margin.left - 9,
-                temperatureY(temperatureValue)
-            );
-
-            context.fillStyle =
-                "#16823b";
-
-            context.textAlign =
-                "left";
-
-            context.fillText(
-                humidityValue.toFixed(1),
-                margin.left + plotWidth + 9,
-                humidityY(humidityValue)
-            );
-        }
-
-        context.strokeStyle = "#555";
-        context.lineWidth = 1.2;
-
-        context.strokeRect(
-            margin.left,
-            margin.top,
-            plotWidth,
-            plotHeight
-        );
-
-        context.fillStyle =
-            "#8b0000";
-
-        context.textAlign =
-            "center";
-
-        context.fillText(
-            "Temperatur [°C]",
-            margin.left,
-            margin.top - 14
-        );
-
-        context.fillStyle =
-            "#16823b";
-
-        context.fillText(
-            "Feuchte [g/kg]",
-            margin.left + plotWidth,
-            margin.top - 14
-        );
-
-        context.restore();
+                testButton.disabled = false;
+            });
     }
 
-    /*
-     * Vertikale Linien bei 00, 06, 12 und 18 Uhr.
-     */
-    function drawTimeGrid(
-        context,
-        margin,
-        plotHeight,
-        xPosition
-    ) {
-        context.save();
-
-        weatherRows.forEach((row, index) => {
-            const hour =
-                row.date.getHours();
-
-            if (![0, 6, 12, 18].includes(hour)) {
-                return;
-            }
-
-            const x =
-                xPosition(index);
-
-            context.beginPath();
-
-            if (hour === 0) {
-                context.strokeStyle =
-                    "rgba(40, 40, 40, 0.50)";
-
-                context.lineWidth = 1.5;
-                context.setLineDash([]);
-            } else if (hour === 12) {
-                context.strokeStyle =
-                    "rgba(40, 40, 40, 0.25)";
-
-                context.lineWidth = 1;
-                context.setLineDash([4, 4]);
-            } else {
-                context.strokeStyle =
-                    "rgba(40, 40, 40, 0.14)";
-
-                context.lineWidth = 1;
-                context.setLineDash([2, 5]);
-            }
-
-            context.moveTo(
-                x,
-                margin.top
-            );
-
-            context.lineTo(
-                x,
-                margin.top + plotHeight
-            );
-
-            context.stroke();
-        });
-
-        context.setLineDash([]);
-        context.restore();
-    }
-
-    function drawThresholdAreas(
-        context,
-        xPosition,
-        humidityY
-    ) {
-        context.save();
-
-        for (
-            let index = 0;
-            index < weatherRows.length - 1;
-            index++
-        ) {
-            const first =
-                weatherRows[index].humidity;
-
-            const second =
-                weatherRows[index + 1].humidity;
-
-            if (
-                first < humidityThreshold &&
-                second < humidityThreshold
-            ) {
-                continue;
-            }
-
-            const x1 =
-                xPosition(index);
-
-            const x2 =
-                xPosition(index + 1);
-
-            context.fillStyle =
-                "rgba(224, 32, 32, 0.14)";
-
-            context.beginPath();
-
-            context.moveTo(
-                x1,
-                humidityY(humidityThreshold)
-            );
-
-            context.lineTo(
-                x1,
-                humidityY(
-                    Math.max(first, humidityThreshold)
-                )
-            );
-
-            context.lineTo(
-                x2,
-                humidityY(
-                    Math.max(second, humidityThreshold)
-                )
-            );
-
-            context.lineTo(
-                x2,
-                humidityY(humidityThreshold)
-            );
-
-            context.closePath();
-            context.fill();
-        }
-
-        context.restore();
-    }
-
-    function drawSeries(
-        context,
-        values,
-        xPosition,
-        yPosition,
-        color,
-        lineWidth
-    ) {
-        context.save();
-
-        context.strokeStyle = color;
-        context.lineWidth = lineWidth;
-        context.lineJoin = "round";
-        context.lineCap = "round";
-
-        context.beginPath();
-
-        values.forEach((value, index) => {
-            const x = xPosition(index);
-            const y = yPosition(value);
-
-            if (index === 0) {
-                context.moveTo(x, y);
-            } else {
-                context.lineTo(x, y);
-            }
-        });
-
-        context.stroke();
-        context.restore();
-    }
-
-    function drawThresholdLine(
-        context,
-        margin,
-        plotWidth,
-        humidityY
-    ) {
-        const y =
-            humidityY(humidityThreshold);
-
-        context.save();
-
-        context.strokeStyle =
-            "#e02020";
-
-        context.lineWidth = 2;
-
-        context.setLineDash([8, 6]);
-
-        context.beginPath();
-
-        context.moveTo(
-            margin.left,
-            y
-        );
-
-        context.lineTo(
-            margin.left + plotWidth,
-            y
-        );
-
-        context.stroke();
-
-        context.setLineDash([]);
-
-        context.fillStyle =
-            "#e02020";
-
-        context.font =
-            "bold 12px Arial";
-
-        context.textAlign =
-            "right";
-
-        context.fillText(
-            humidityThreshold.toFixed(1) + " g/kg",
-            margin.left + plotWidth - 5,
-            y - 8
-        );
-
-        context.restore();
-    }
-
-    /*
-     * Verbesserte X-Achse:
-     * 1. Uhrzeiten in 6-Stunden-Schritten
-     * 2. Ein eigener Block pro Kalendertag
-     * 3. Wochenenden mit roter Beschriftung
-     */
-    function drawImprovedTimeAxis(
-        context,
-        margin,
-        plotWidth,
-        plotHeight,
-        xPosition
-    ) {
-        const plotBottom =
-            margin.top + plotHeight;
-
-        const chartRight =
-            margin.left + plotWidth;
-
-        context.save();
-
-        /*
-         * Stundenbeschriftung
-         */
-        context.font =
-            "11px Arial";
-
-        context.textAlign =
-            "center";
-
-        context.textBaseline =
-            "top";
-
-        context.fillStyle =
-            "#5f6368";
-
-        weatherRows.forEach((row, index) => {
-            const hour =
-                row.date.getHours();
-
-            if (![0, 6, 12, 18].includes(hour)) {
-                return;
-            }
-
-            const x =
-                xPosition(index);
-
-            if (
-                x < margin.left + 15 ||
-                x > chartRight - 15
-            ) {
-                return;
-            }
-
-            context.fillText(
-                String(hour).padStart(2, "0") + ":00",
-                x,
-                plotBottom + 8
-            );
-        });
-
-        /*
-         * Vorhersagewerte nach Tagen gruppieren
-         */
-        const dayGroups = [];
-
-        weatherRows.forEach((row, index) => {
-            const dayKey =
-                row.date.getFullYear() +
-                "-" +
-                String(
-                    row.date.getMonth() + 1
-                ).padStart(2, "0") +
-                "-" +
-                String(
-                    row.date.getDate()
-                ).padStart(2, "0");
-
-            const lastGroup =
-                dayGroups.length > 0
-                    ? dayGroups[dayGroups.length - 1]
-                    : null;
-
-            if (
-                !lastGroup ||
-                lastGroup.key !== dayKey
-            ) {
-                dayGroups.push({
-                    key: dayKey,
-                    date: row.date,
-                    firstIndex: index,
-                    lastIndex: index
-                });
-            } else {
-                lastGroup.lastIndex =
-                    index;
-            }
-        });
-
-        /*
-         * Tagesblöcke darstellen
-         */
-        dayGroups.forEach((group, groupIndex) => {
-            let left;
-            let right;
-
-            if (group.firstIndex === 0) {
-                left = margin.left;
-            } else {
-                left =
-                    (
-                        xPosition(group.firstIndex - 1) +
-                        xPosition(group.firstIndex)
-                    ) / 2;
-            }
-
-            if (
-                group.lastIndex ===
-                weatherRows.length - 1
-            ) {
-                right = chartRight;
-            } else {
-                right =
-                    (
-                        xPosition(group.lastIndex) +
-                        xPosition(group.lastIndex + 1)
-                    ) / 2;
-            }
-
-            const center =
-                (left + right) / 2;
-
-            context.fillStyle =
-                groupIndex % 2 === 0
-                    ? "#f4f6f8"
-                    : "#e7ebef";
-
-            context.fillRect(
-                left,
-                plotBottom + 28,
-                right - left,
-                38
-            );
-
-            context.strokeStyle =
-                "#aeb4ba";
-
-            context.lineWidth = 1;
-
-            context.strokeRect(
-                left,
-                plotBottom + 28,
-                right - left,
-                38
-            );
-
-            const weekday =
-                new Intl.DateTimeFormat(
-                    "de-DE",
-                    {
-                        weekday: "short"
-                    }
-                ).format(group.date);
-
-            const date =
-                new Intl.DateTimeFormat(
-                    "de-DE",
-                    {
-                        day: "2-digit",
-                        month: "2-digit"
-                    }
-                ).format(group.date);
-
-            const isWeekend =
-                group.date.getDay() === 0 ||
-                group.date.getDay() === 6;
-
-            context.font =
-                "bold 12px Arial";
-
-            context.textAlign =
-                "center";
-
-            context.textBaseline =
-                "middle";
-
-            context.fillStyle =
-                isWeekend
-                    ? "#8b0000"
-                    : "#25282b";
-
-            context.fillText(
-                weekday + " " + date,
-                center,
-                plotBottom + 47
-            );
-        });
-
-        /*
-         * Beschriftung unter der X-Achse
-         */
-        context.fillStyle =
-            "#444";
-
-        context.font =
-            "12px Arial";
-
-        context.textAlign =
-            "center";
-
-        context.textBaseline =
-            "top";
-
-        context.fillText(
-            "Ortszeit Dresden [Europe/Berlin]",
-            margin.left + plotWidth / 2,
-            plotBottom + 76
-        );
-
-        context.restore();
-    }
-
-    document
-        .getElementById("refreshButton")
-        .addEventListener("click", loadWeather);
-
-    window.addEventListener(
-        "resize",
-        resizeAndDraw
+    testButton.addEventListener(
+        "click",
+        testWeatherApi
     );
 
-    loadWeather();
+    testWeatherApi();
+})();
 </script>
 
 </body>
