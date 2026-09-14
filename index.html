@@ -2,11 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Wetterplot Dresden-Klotzsche</title>
 
@@ -24,11 +20,10 @@
         }
 
         .dashboard {
-            width: 100%;
             max-width: 1400px;
             margin: 0 auto;
             padding: 24px;
-            background: #ffffff;
+            background: white;
             border: 1px solid #dfe3e8;
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -36,8 +31,8 @@
 
         h1 {
             margin: 0 0 8px;
-            font-size: 26px;
             text-align: center;
+            font-size: 26px;
         }
 
         .subtitle {
@@ -69,9 +64,90 @@
             border-radius: 6px;
         }
 
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 14px;
+            background: #f7f9fb;
+            border: 1px solid #e3e7eb;
+            border-radius: 8px;
+        }
+
+        .control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control label {
+            color: #4f555b;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        input[type="datetime-local"] {
+            min-width: 210px;
+            padding: 9px;
+            border: 1px solid #aeb4ba;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        button {
+            padding: 10px 16px;
+            color: white;
+            background: #245ea8;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #194a86;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .download {
+            background: #16823b;
+        }
+
+        .download:hover {
+            background: #10652d;
+        }
+
+        .quick-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .quick-buttons button {
+            padding: 7px 12px;
+            color: #245ea8;
+            background: white;
+            border: 1px solid #9ab4d5;
+            font-size: 13px;
+        }
+
+        .quick-buttons button:hover {
+            color: white;
+            background: #245ea8;
+        }
+
         .summary {
             display: grid;
-            grid-template-columns: repeat(4, minmax(150px, 1fr));
+            grid-template-columns: repeat(4, minmax(140px, 1fr));
             gap: 12px;
             margin-bottom: 18px;
         }
@@ -95,95 +171,6 @@
             font-weight: bold;
         }
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 18px;
-            padding: 14px;
-            background: #f7f9fb;
-            border: 1px solid #e3e7eb;
-            border-radius: 8px;
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .control-group label {
-            color: #4f555b;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        input[type="datetime-local"] {
-            min-width: 210px;
-            padding: 9px;
-            background: #ffffff;
-            border: 1px solid #aeb4ba;
-            border-radius: 6px;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 14px;
-        }
-
-        input[type="datetime-local"]:focus {
-            border-color: #245ea8;
-            outline: 2px solid rgba(36, 94, 168, 0.18);
-        }
-
-        button {
-            padding: 10px 16px;
-            color: #ffffff;
-            background: #245ea8;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: #194a86;
-        }
-
-        button:disabled {
-            cursor: not-allowed;
-            opacity: 0.55;
-        }
-
-        .download-button {
-            background: #16823b;
-        }
-
-        .download-button:hover {
-            background: #10652d;
-        }
-
-        .quick-buttons {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: -6px 0 18px;
-        }
-
-        .quick-button {
-            padding: 7px 12px;
-            color: #245ea8;
-            background: #ffffff;
-            border: 1px solid #9ab4d5;
-            font-size: 13px;
-        }
-
-        .quick-button:hover {
-            color: #ffffff;
-            background: #245ea8;
-        }
-
         .legend {
             display: flex;
             justify-content: center;
@@ -203,35 +190,31 @@
             display: inline-block;
             width: 28px;
             height: 4px;
-            border-radius: 2px;
         }
 
-        .temperature-line {
+        .temperature {
             background: #8b0000;
         }
 
-        .humidity-line {
+        .humidity {
             background: #16823b;
         }
 
-        .threshold-line {
+        .threshold {
             height: 0;
             border-top: 3px dashed #e02020;
-            border-radius: 0;
         }
 
-        .now-line {
-            width: 2px;
+        .now {
+            width: 3px;
             height: 18px;
             background: #245ea8;
         }
 
         .chart-wrapper {
-            position: relative;
             width: 100%;
             height: 650px;
-            overflow: hidden;
-            background: #ffffff;
+            background: white;
         }
 
         canvas {
@@ -241,20 +224,13 @@
         }
 
         .footer {
-            margin-top: 16px;
+            margin-top: 14px;
             color: #60656b;
             font-size: 12px;
-            line-height: 1.5;
             text-align: center;
         }
 
-        @media (max-width: 850px) {
-            .summary {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 600px) {
+        @media (max-width: 750px) {
             body {
                 padding: 8px;
             }
@@ -275,7 +251,7 @@
                 align-items: stretch;
             }
 
-            .control-group,
+            .control,
             input,
             button {
                 width: 100%;
@@ -304,6 +280,59 @@
         JavaScript wird gestartet ...
     </div>
 
+    <section class="controls">
+
+        <div class="control">
+            <label for="startInput">Anfangszeitpunkt</label>
+            <input id="startInput" type="datetime-local" step="3600">
+        </div>
+
+        <div class="control">
+            <label for="endInput">Endzeitpunkt</label>
+            <input id="endInput" type="datetime-local" step="3600">
+        </div>
+
+        <button id="loadButton" type="button">
+            Zeitraum laden
+        </button>
+
+        <button
+            id="downloadButton"
+            class="download"
+            type="button"
+            disabled
+        >
+            Diagramm als PNG
+        </button>
+
+    </section>
+
+    <div class="quick-buttons">
+        <button type="button" data-range="future24">
+            Nächste 24 Stunden
+        </button>
+
+        <button type="button" data-range="future72">
+            Nächste 3 Tage
+        </button>
+
+        <button type="button" data-range="future168">
+            Nächste 7 Tage
+        </button>
+
+        <button type="button" data-range="future336">
+            Nächste 14 Tage
+        </button>
+
+        <button type="button" data-range="past24">
+            Letzte 24 Stunden
+        </button>
+
+        <button type="button" data-range="past168">
+            Letzte 7 Tage
+        </button>
+    </div>
+
     <section id="summary" class="summary" hidden>
 
         <div class="card">
@@ -322,124 +351,31 @@
         </div>
 
         <div class="card">
-            <div class="card-label">Anzahl Stundenwerte</div>
-            <div id="numberOfValues" class="card-value">–</div>
+            <div class="card-label">Stundenwerte</div>
+            <div id="countValue" class="card-value">–</div>
         </div>
 
     </section>
-
-    <section class="controls">
-
-        <div class="control-group">
-            <label for="startTime">
-                Anfangszeitpunkt
-            </label>
-
-            <input
-                id="startTime"
-                type="datetime-local"
-                step="3600"
-            >
-        </div>
-
-        <div class="control-group">
-            <label for="endTime">
-                Endzeitpunkt
-            </label>
-
-            <input
-                id="endTime"
-                type="datetime-local"
-                step="3600"
-            >
-        </div>
-
-        <button id="applyButton" type="button">
-            Zeitraum laden
-        </button>
-
-        <button
-            id="downloadButton"
-            class="download-button"
-            type="button"
-            disabled
-        >
-            Diagramm als PNG
-        </button>
-
-    </section>
-
-    <div class="quick-buttons">
-
-        <button
-            class="quick-button"
-            type="button"
-            data-hours="24"
-        >
-            Nächste 24 Stunden
-        </button>
-
-        <button
-            class="quick-button"
-            type="button"
-            data-hours="72"
-        >
-            Nächste 3 Tage
-        </button>
-
-        <button
-            class="quick-button"
-            type="button"
-            data-hours="168"
-        >
-            Nächste 7 Tage
-        </button>
-
-        <button
-            class="quick-button"
-            type="button"
-            data-hours="336"
-        >
-            Nächste 14 Tage
-        </button>
-
-        <button
-            class="quick-button"
-            type="button"
-            data-past-hours="24"
-        >
-            Letzte 24 Stunden
-        </button>
-
-        <button
-            class="quick-button"
-            type="button"
-            data-past-hours="168"
-        >
-            Letzte 7 Tage
-        </button>
-
-    </div>
 
     <div class="legend">
 
         <div class="legend-item">
-            <span class="legend-line temperature-line"></span>
+            <span class="legend-line temperature"></span>
             Temperatur [°C]
         </div>
 
         <div class="legend-item">
-            <span class="legend-line humidity-line"></span>
+            <span class="legend-line humidity"></span>
             Absolute Feuchte [g/kg]
         </div>
 
         <div class="legend-item">
-            <span class="legend-line threshold-line"></span>
+            <span class="legend-line threshold"></span>
             Entfeuchtungsgrenze
         </div>
 
         <div class="legend-item">
-            <span class="now-line"></span>
+            <span class="now"></span>
             Aktueller Zeitpunkt
         </div>
 
@@ -450,9 +386,8 @@
     </div>
 
     <div class="footer">
-        Quelle: Open-Meteo Live Forecast und Historical Forecast.
-        Referenzgrenze: 22 °C und 40 % relative Feuchte.
-        Maximal auswählbarer Zeitraum: 14 Tage.
+        Quelle: Open-Meteo · Referenzgrenze:
+        22 °C und 40 % relative Feuchte · Maximal 14 Tage
     </div>
 
 </main>
@@ -461,17 +396,28 @@
 (function () {
     "use strict";
 
-    var latitude = 51.1328;
-    var longitude = 13.7672;
-    var timezone = "Europe/Berlin";
-    var maximumRangeHours = 14 * 24;
+    var LATITUDE = 51.1328;
+    var LONGITUDE = 13.7672;
+    var MAXIMUM_HOURS = 336;
 
-    var visibleRows = [];
-    var humidityThreshold = 0;
+    var rows = [];
+    var threshold = 0;
     var resizeTimer = null;
 
     var statusElement =
         document.getElementById("status");
+
+    var startInput =
+        document.getElementById("startInput");
+
+    var endInput =
+        document.getElementById("endInput");
+
+    var loadButton =
+        document.getElementById("loadButton");
+
+    var downloadButton =
+        document.getElementById("downloadButton");
 
     var summaryElement =
         document.getElementById("summary");
@@ -479,32 +425,20 @@
     var subtitleElement =
         document.getElementById("subtitle");
 
-    var startInput =
-        document.getElementById("startTime");
-
-    var endInput =
-        document.getElementById("endTime");
-
-    var applyButton =
-        document.getElementById("applyButton");
-
-    var downloadButton =
-        document.getElementById("downloadButton");
-
     var canvas =
         document.getElementById("weatherCanvas");
 
-    function showStatus(text, type) {
+    function setStatus(text, type) {
         statusElement.textContent = text;
         statusElement.className =
-            "status" + (type ? " " + type : "");
+            "status " + type;
     }
 
     function pad(value) {
         return String(value).padStart(2, "0");
     }
 
-    function roundToHour(date) {
+    function roundHour(date) {
         return new Date(
             date.getFullYear(),
             date.getMonth(),
@@ -512,4 +446,74 @@
             date.getHours(),
             0,
             0,
- 
+            0
+        );
+    }
+
+    function addHours(date, hours) {
+        return new Date(
+            date.getTime() +
+            hours * 60 * 60 * 1000
+        );
+    }
+
+    function inputText(date) {
+        return (
+            date.getFullYear() +
+            "-" +
+            pad(date.getMonth() + 1) +
+            "-" +
+            pad(date.getDate()) +
+            "T" +
+            pad(date.getHours()) +
+            ":00"
+        );
+    }
+
+    function dateText(date) {
+        return (
+            date.getFullYear() +
+            "-" +
+            pad(date.getMonth() + 1) +
+            "-" +
+            pad(date.getDate())
+        );
+    }
+
+    function parseTime(value) {
+        var match = String(value).match(
+            /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
+        );
+
+        if (!match) {
+            return null;
+        }
+
+        return new Date(
+            Number(match[1]),
+            Number(match[2]) - 1,
+            Number(match[3]),
+            Number(match[4]),
+            Number(match[5]),
+            0,
+            0
+        );
+    }
+
+    function dayStart(date) {
+        return new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+            0,
+            0,
+            0,
+            0
+        );
+    }
+
+    function dayEnd(date) {
+        return new Date(
+            date.getFullYear(),
+            date.getMonth(),
+   
