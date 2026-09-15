@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wetterplot Dresden-Klotzsche</title>
+  <style>
+    :root{--blue:#245ea8;--green:#16823b;--red:#9b1c1c;--purple:#6f42c1;--ink:#202124;--muted:#667085;--line:#dfe3e8;--surface:#fff;--bg:#f4f6f8}
+    *{box-sizing:border-box}body{margin:0;padding:20px;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}.dashboard{max-width:1450px;margin:auto;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.07)}h1{text-align:center;margin:0 0 8px;font-size:clamp(24px,3vw,36px)}.subtitle,.status,.footer{text-align:center}.subtitle{color:var(--muted)}.status{min-height:24px;margin:14px 0;font-weight:bold}.loading{color:var(--blue)}.success{color:#176b35}.error{color:#a40000;background:#ffecec;padding:12px;border-radius:8px}.current{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin:18px 0}.card{padding:16px;border:1px solid #e2e7ec;border-radius:12px;background:#f8fafc}.card-label{color:var(--muted);font-size:13px;font-weight:bold}.card-value{display:block;margin-top:6px;font-size:clamp(23px,3vw,34px);font-weight:700}.card-time{font-size:16px}.controls,.quick,.legend{display:flex;justify-content:center;align-items:end;flex-wrap:wrap;gap:12px;margin:16px 0}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:13px;font-weight:bold}input,button{padding:10px;border-radius:7px;font:inherit}input{border:1px solid #aeb4ba}button{border:0;background:var(--blue);color:#fff;font-weight:bold;cursor:pointer}button:hover{filter:brightness(.95)}button:disabled{opacity:.55}.save{background:var(--green)}.quick button{padding:7px 12px;background:#fff;color:var(--blue);border:1px solid #9ab4d5}.toggle{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid #d8dee5;border-radius:8px;background:#f8fafc;font-weight:bold}.toggle input{width:auto}.summary{padding:12px;background:#f7f9fb;border:1px solid #e3e7eb;border-radius:8px;font-weight:bold;text-align:center}.legend{font-size:14px}.legend span{white-space:nowrap}.swatch{display:inline-block;width:28px;height:4px;margin-right:6px;vertical-align:middle}.temp{background:var(--red)}.hum{background:var(--green)}.enth{background:var(--purple)}.thr{height:0;border-top:3px dashed #e02020}.chart{position:relative;height:650px;touch-action:none}.chart canvas{display:block;width:100%;height:100%}.tooltip{position:absolute;z-index:2;display:none;pointer-events:none;min-width:190px;padding:10px 12px;border-radius:8px;background:rgba(24,28,33,.94);color:#fff;font-size:13px;line-height:1.55;box-shadow:0 4px 15px rgba(0,0,0,.2)}.footer{margin-top:14px;color:var(--muted);font-size:12px}@media(max-width:800px){body{padding:8px}.dashboard{padding:12px}.current{grid-template-columns:repeat(2,1fr)}.field,input,.controls button{width:100%}.toggle{width:100%;justify-content:center}.chart{height:560px}}@media(max-width:430px){.current{grid-template-columns:1fr}.chart{height:520px}}
+  </style>
+</head>
+<body>
+<main class="dashboard">
+  <h1>Dresden-Klotzsche: Wetterübersicht</h1>
+  <p id="subtitle" class="subtitle">Bitte Zeitraum auswählen</p>
+  <div id="status" class="status loading">JavaScript wird gestartet ...</div>
+
+  <section class="current" aria-label="Aktuelle Wetterwerte">
+    <div class="card"><span class="card-label">Aktuelle Temperatur</span><strong id="currentTemp" class="card-value">–</strong></div>
+    <div class="card"><span class="card-label">Aktuelle absolute Feuchte</span><strong id="currentHumidity" class="card-value">–</strong></div>
+    <div class="card"><span class="card-label">Aktuelle Enthalpie</span><strong id="currentEnthalpy" class="card-value">–</strong></div>
+    <div class="card"><span class="card-label">Stand der Wetterdaten</span><strong id="currentTime" class="card-value card-time">–</strong></div>
+  </section>
+
+  <div class="controls">
+    <div class="field"><label for="start">Anfangszeitpunkt</label><input id="start" type="datetime-local" step="3600"></div>
+    <div class="field"><label for="end">Endzeitpunkt</label><input id="end" type="datetime-local" step="3600"></div>
+    <label class="toggle"><input id="enthalpyToggle" type="checkbox">Enthalpie mit eigener Achse</label>
+    <button id="load" type="button">Zeitraum laden</button>
+    <button id="save" class="save" type="button" disabled>Diagramm als PNG</button>
+  </div>
+  <div class="quick">
+    <button type="button" data-hours="24">Nächste 24 Stunden</button><button type="button" data-hours="168">Nächste 7 Tage</button><button type="button" data-hours="336">Nächste 14 Tage</button><button type="button" data-hours="24" data-past="1">Letzte 24 Stunden</button><button type="button" data-hours="168" data-past="1">Letzte 7 Tage</button>
+  </div>
+  <div id="summary" class="summary">Noch keine Daten geladen.</div>
+  <div class="legend"><span><i class="swatch temp"></i>Temperatur [°C]</span><span><i class="swatch hum"></i>Absolute Feuchte [g/kg]</span><span id="enthalpyLegend" hidden><i class="swatch enth"></i>Enthalpie [kJ/kg tr. Luft]</span><span><i class="swatch thr"></i>Entfeuchtungsgrenze</span></div>
+  <div class="chart"><canvas id="plot" aria-label="Interaktiver Wetterplot"></canvas><div id="tooltip" class="tooltip"></div></div>
+  <div class="footer">Maus oder Finger über das Diagramm bewegen, um Einzelwerte anzuzeigen. Quelle: Open-Meteo · Referenzgrenze: 22 °C und 40 % relative Feuchte · Maximal 14 Tage</div>
+</main>
+<script src="./app.js"></script>
+</body>
+</html>
